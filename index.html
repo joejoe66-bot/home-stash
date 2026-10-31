@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Home Stash</title>
+<meta name="description" content="Home Stash 屋企寶庫 — household stock, expiry & shopping list">
+<meta name="theme-color" content="#FFF7F0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Home Stash">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#FFF7F0; --card:#fff; --ink:#4A3B47; --muted:#9A8A95;
+  --pink:#FF8FAB; --pink2:#FFE4EC; --mint:#7ED6B5; --mint2:#E3F7EF;
+  --yellow:#FFD166; --yellow2:#FFF4D6; --red:#FF6B6B; --red2:#FFE3E3; --blue:#8EC5FF;
+  --r:20px; --shadow:0 6px 18px rgba(255,143,171,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC","Microsoft JhengHei",sans-serif}
+body{padding-bottom:calc(100px + env(safe-area-inset-bottom));-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left));background:rgba(255,247,240,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.brand{font-weight:800;font-size:20px}
+.brand small{font-weight:600;font-size:12px;color:var(--muted);margin-left:4px}
+.me{border:0;background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;box-shadow:var(--shadow);font-size:14px;color:var(--ink)}
+main{max-width:560px;margin:0 auto;padding:0 calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left))}
+.tab{display:none;animation:fade .25s}
+.tab.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin:12px 0;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:16px}
+.empty{color:var(--muted);text-align:center;margin:8px 0}
+.hero{display:flex;gap:16px;align-items:center;background:linear-gradient(135deg,#FFE4EC,#FFF4D6)}
+.ring{--p:100;width:92px;height:92px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--pink) calc(var(--p)*1%),#fff 0)}
+.ring span{width:72px;height:72px;border-radius:50%;background:#FFF7F0;display:grid;place-items:center;font-size:38px}
+.big{font-size:34px;font-weight:900}.big small{font-size:14px;color:var(--muted)}
+.sub{font-size:13px;color:var(--muted);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#fff;border-radius:16px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted)}
+.lot{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed #F3DDE4}
+.lot:first-of-type{border-top:0}
+.em{width:42px;height:42px;border-radius:14px;background:var(--pink2);display:grid;place-items:center;font-size:24px;flex:none;overflow:hidden}
+.em img{width:100%;height:100%;object-fit:cover}
+.info{flex:1;min-width:0}
+.info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12px;color:var(--muted)}
+.badge{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.b-red{background:var(--red2);color:#D63B3B}.b-org{background:#FFE8D6;color:#E07A2E}
+.b-yel{background:var(--yellow2);color:#B8860B}.b-grn{background:var(--mint2);color:#2E9B73}.b-gry{background:#F1EEF0;color:var(--muted)}
+.acts{display:flex;gap:6px}
+.acts button{border:0;border-radius:12px;padding:8px 10px;font-weight:800;font-size:14px;min-width:46px;min-height:42px}
+.use{background:var(--mint2);color:#2E9B73}.toss{background:#F6F1F3}
+.btn{border:0;border-radius:16px;padding:12px 16px;font-weight:800;font-size:15px;background:#F6F1F3;color:var(--ink);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.btn.primary{background:var(--pink);color:#fff;box-shadow:0 6px 14px rgba(255,143,171,.45)}
+.btn.mint{background:var(--mint);color:#fff}
+.btn.ghost{background:transparent;border:2px dashed #F3C6D3;color:var(--pink)}
+.btn.full{width:100%;margin-top:10px}
+.btn:active,.acts button:active,.navbtn:active{transform:scale(.95)}
+.row{display:flex;gap:8px;margin-top:10px}.row>*{flex:1}
+input,select{width:100%;border:2px solid #F3DDE4;border-radius:14px;padding:11px 12px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+input:focus{outline:none;border-color:var(--pink)}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid #F3DDE4;background:#fff;border-radius:999px;padding:7px 12px;font-size:14px;font-weight:700;color:var(--ink)}
+.chip.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.chips.small .chip{padding:5px 10px;font-size:12px}
+.scroll-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.scroll-chips .chip{flex:none}
+.group{padding:12px 16px}
+.ghead{display:flex;align-items:center;gap:10px}
+.ghead .info b{font-size:16px}
+.total{font-weight:900;font-size:18px;color:var(--pink)}
+.mini{border:0;background:var(--pink2);color:var(--pink);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13px;min-height:36px;white-space:nowrap}
+#reader{width:100%;border-radius:16px;overflow:hidden;background:#2b2230;min-height:0}
+#reader video{border-radius:16px}
+.scanbox{text-align:center;padding:26px 10px}
+.scanbox .bigicon{font-size:64px;animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.tip{font-size:12px;color:var(--muted);line-height:1.6}
+.shopitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed #F3DDE4}
+.shopitem:first-child{border-top:0}
+.check{width:28px;height:28px;border-radius:10px;border:2px solid var(--pink);display:grid;place-items:center;flex:none;font-size:16px;background:#fff}
+.done .check{background:var(--mint);border-color:var(--mint);color:#fff}
+.done .info b{text-decoration:line-through;color:var(--muted)}
+.rank{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px dashed #F3DDE4}
+.rank:first-child{border-top:0}
+.medal{font-size:26px;width:34px;text-align:center}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--yellow2);display:grid;place-items:center;font-size:26px}
+.bar{height:8px;border-radius:9px;background:#F6F1F3;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--yellow))}
+.pts{font-weight:900;font-size:18px;color:var(--pink)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:flex-end;
+  background:#fff;padding:8px 6px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.06);border-radius:24px 24px 0 0}
+.navbtn{border:0;background:none;display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:700;color:var(--muted);gap:2px;padding:4px 8px;position:relative}
+.navbtn .i{font-size:22px}
+.navbtn.on{color:var(--pink)}
+.navbtn .dot{position:absolute;top:0;right:6px;background:var(--red);color:#fff;border-radius:999px;font-size:10px;padding:1px 5px}
+.scanfab{width:64px;height:64px;border-radius:50%;background:var(--pink);color:#fff;font-size:28px;display:grid;place-items:center;
+  margin-top:-34px;box-shadow:0 8px 20px rgba(255,143,171,.55);border:5px solid var(--bg)}
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(74,59,71,.45);display:flex;align-items:flex-end;justify-content:center}
+.overlay.center{align-items:center}
+.hidden{display:none!important}
+.sheet-body{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-radius:28px 28px 0 0;padding:18px 16px calc(30px + env(safe-area-inset-bottom));animation:up .28s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet-head{display:flex;gap:12px;align-items:center}
+.sheet-head h2{margin:4px 0;font-size:20px}
+.big-em{width:72px;height:72px;border-radius:20px;background:#fff;display:grid;place-items:center;font-size:42px;overflow:hidden;flex:none;box-shadow:var(--shadow)}
+.big-em img{width:100%;height:100%;object-fit:contain}
+.x{margin-left:auto;align-self:flex-start;border:0;background:#fff;border-radius:50%;width:36px;height:36px;font-size:16px;box-shadow:var(--shadow)}
+.pill{display:inline-block;font-size:11px;font-weight:800;background:var(--mint2);color:#2E9B73;padding:3px 9px;border-radius:999px}
+.have{background:var(--yellow2);border-radius:14px;padding:10px 12px;margin:14px 0 4px;font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stepper{display:flex;gap:6px}
+.stepper button{border:0;background:var(--pink2);color:var(--pink);border-radius:12px;width:44px;font-size:22px;font-weight:900}
+.stepper input{text-align:center}
+.picker{background:var(--bg);border-radius:28px;padding:22px;width:calc(100% - 32px);max-width:420px;text-align:center;animation:up .3s}
+.picker h2{margin:6px 0 2px}
+.who{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.who button{border:0;background:#fff;border-radius:18px;padding:14px 6px;font-weight:800;box-shadow:var(--shadow);font-size:13px;color:var(--ink)}
+.who button span{display:block;font-size:34px;margin-bottom:4px}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:80;
+  background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-weight:700;font-size:14px;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#busy{position:fixed;top:0;left:0;height:4px;width:0;z-index:90;background:linear-gradient(90deg,var(--pink),var(--yellow),var(--mint));transition:width .4s}
+#busy.on{width:85%}
+.pop{position:fixed;z-index:85;font-size:28px;pointer-events:none;animation:fly 1.1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),-260px) rotate(var(--rot));opacity:0}}
+.splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;text-align:center;transition:opacity .4s}
+.splash .bigicon{font-size:80px;animation:bob 1.2s ease-in-out infinite}
+.logline{font-size:13px;padding:6px 0;border-top:1px dashed #F3DDE4}
+.logline:first-child{border-top:0}
+.logline small{color:var(--muted)}
+.spin{font-size:46px;animation:bob 1s infinite}
+.center{text-align:center}
+.lot.sub{padding:8px 0 8px 8px}
+.lot.sub .info b{font-size:14px;font-weight:700;white-space:normal}
+@media (max-width:420px){.ptsS{display:none}.brand{font-size:18px}header .me{padding:8px 10px}.hbtns{gap:6px}header{padding-left:calc(12px + env(safe-area-inset-left));padding-right:calc(12px + env(safe-area-inset-right))}}
+#pinBox input{text-align:center;font-size:22px;letter-spacing:6px;margin:14px 0 4px}
+#pinErr{color:#D63B3B;font-size:13px;min-height:18px}
+@media (min-width:760px){
+  main{max-width:1060px;padding-left:24px;padding-right:24px}
+  header{padding-left:max(24px,calc((100% - 1060px)/2 + 24px));padding-right:max(24px,calc((100% - 1060px)/2 + 24px))}
+  #tab-home.active,#tab-rank.active,#tab-scan.active{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px;align-items:start}
+  #tab-home.active>*,#tab-rank.active>*,#tab-scan.active>*,#stockList>*{min-width:0}
+  #tab-home .hero,#tab-home .stats,#tab-home>.btn{grid-column:1/-1}
+  #tab-home .stats{margin:2px 0 4px}
+  #stockList{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px;align-items:start}
+  #tab-shop .card{max-width:680px;margin-left:auto;margin-right:auto}
+  #tab-shop>.tip{max-width:680px;margin:0 auto}
+  .overlay{align-items:center}
+  .sheet-body{max-width:640px;border-radius:28px;max-height:88vh;padding-bottom:24px}
+  nav{left:50%;right:auto;transform:translateX(-50%);width:min(680px,92%);bottom:14px;border-radius:28px;padding-bottom:10px;box-shadow:0 10px 30px rgba(74,59,71,.15)}
+  body{padding-bottom:120px}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+  .who{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+}
+@media (min-width:1100px){
+  #stockList{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+#loader{position:fixed;inset:0;z-index:95;background:rgba(255,247,240,.55);backdrop-filter:blur(2px);display:none;place-items:center}
+#loader.on{display:grid}
+#loader .ld{background:#fff;border-radius:24px;padding:22px 30px;box-shadow:var(--shadow);text-align:center;font-weight:800}
+#loader .sp{width:46px;height:46px;border-radius:50%;border:5px solid var(--pink2);border-top-color:var(--pink);animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning span{display:inline-block;animation:spin .8s linear infinite}
+details.card>summary{font-weight:800;font-size:16px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:'▾';color:var(--pink);transition:transform .2s}
+details.card[open]>summary::after{transform:rotate(180deg)}
+details.card[open]>summary{margin-bottom:10px}
+.howto{background:var(--mint2);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.7;margin-top:12px}
+.hbtns{display:flex;gap:8px;align-items:center;flex:none}
+.me{white-space:nowrap}
+.lang{padding:8px 12px}
+.brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:480px){.brand small{display:none}}
+.picker .lang{margin-top:4px}
+.btn.wa{background:#25D366;color:#fff;box-shadow:0 6px 14px rgba(37,211,102,.35)}
+.btn.big{font-size:17px;padding:14px 16px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.ptile{border:0;background:#fff;border-radius:16px;padding:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink);font-family:inherit}
+.ptile b{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptile span{font-size:11px;color:var(--pink);font-weight:800}
+.pimg{width:72px;height:72px;border-radius:14px;background:var(--pink2);display:grid;place-items:center;font-size:36px;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover}
+</style>
+</head>
+<body>
+<div id="busy"></div>
+<div id="loader"><div class="ld"><div class="sp"></div><div id="loaderTxt">…</div></div></div>
+<div class="splash" id="splash"><div><div class="bigicon">🏠</div><h2 data-t="brand">Home Stash</h2><p class="sub" data-t="loading">Tidying up…</p></div></div>
+
+<header>
+  <div class="brand"><span data-t="brandIcon">🏠 Home Stash</span><small data-t="brandSub"></small></div>
+  <div class="hbtns">
+    <button class="me lang" id="refBtn" onclick="refresh()" aria-label="Refresh"><span>🔄</span></button>
+    <button class="me lang" id="langBtn" onclick="toggleLang()">中文</button>
+    <button class="me" id="meBtn" onclick="showPicker()">🙂</button>
+  </div>
+</header>
+
+<main>
+  <section id="tab-home" class="tab active"></section>
+
+  <section id="tab-stock" class="tab">
+    <div class="card" style="padding:12px">
+      <input id="q" data-tp="search" oninput="S.q=this.value.toLowerCase();renderStock()">
+      <div class="chips scroll-chips" id="locChips" style="margin-top:10px"></div>
+    </div>
+    <div id="stockList"></div>
+  </section>
+
+  <section id="tab-scan" class="tab">
+    <div class="card">
+      <div id="readerFile" style="position:absolute;left:-9999px;top:0;width:300px;height:300px;overflow:hidden"></div>
+      <div class="scanbox" id="scanIdle">
+        <div class="bigicon">📦</div>
+        <h3 data-t="scanTitle"></h3>
+        <p class="tip" data-t="scanTip"></p>
+      </div>
+      <label class="btn primary full big" style="margin:0"><span data-t="photo"></span>
+        <input type="file" accept="image/*" capture="environment" onchange="scanPhoto(this)" hidden></label>
+      <div class="row">
+        <input id="manualCode" inputmode="numeric" data-tp="typeCode" onkeydown="if(event.key==='Enter')manualLookup()">
+        <button class="btn" style="flex:none" onclick="manualLookup()">🔍</button>
+      </div>
+      <button class="btn ghost full" onclick="openManual()" data-t="noBarcode"></button>
+      <p class="tip" data-t="scanHelp"></p>
+    </div>
+    <div class="card" id="photoCard">
+      <h3 data-t="photoGridTitle"></h3>
+      <p class="tip" style="margin-top:-4px" data-t="photoGridTip"></p>
+      <div class="pgrid" id="photoGrid"></div>
+    </div>
+  </section>
+
+  <section id="tab-shop" class="tab">
+    <div class="card">
+      <h3 data-t="shopTitle"></h3>
+      <div class="row" style="margin-top:0">
+        <input id="shopInput" data-tp="shopPh" onkeydown="if(event.key==='Enter')addShop()">
+        <button class="btn primary" style="flex:none" onclick="addShop()">＋</button>
+      </div>
+      <div class="howto" id="shopHow"></div>
+      <div id="shopList" style="margin-top:8px"></div>
+      <button class="btn ghost full" onclick="clearBought()" data-t="clearBought"></button>
+      <button class="btn wa full" onclick="shareWA()" data-t="waShare"></button>
+    </div>
+    <p class="tip center" data-t="shopTip"></p>
+  </section>
+
+  <section id="tab-rank" class="tab"></section>
+</main>
+
+<nav>
+  <button class="navbtn on" data-tab="home" onclick="go('home')"><span class="i">🏡</span><span data-t="navHome"></span></button>
+  <button class="navbtn" data-tab="stock" onclick="go('stock')"><span class="i">📦</span><span data-t="navStock"></span></button>
+  <button class="navbtn" data-tab="scan" onclick="go('scan')"><span class="scanfab">📷</span><span data-t="navScan"></span></button>
+  <button class="navbtn" data-tab="shop" onclick="go('shop')"><span class="i">🛒</span><span data-t="navShop"></span><span class="dot hidden" id="shopDot"></span></button>
+  <button class="navbtn" data-tab="rank" onclick="go('rank')"><span class="i">🏆</span><span data-t="navRank"></span></button>
+</nav>
+
+<div class="overlay hidden" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheet-body" id="sheetBody"></div></div>
+<div class="overlay center hidden" id="picker"><div class="picker" id="pickerBody"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ===== 語言 Language ===== */
+const L={
+ zh:{brandIcon:'🏠 屋企寶庫',brandSub:'Home Stash',brand:'屋企寶庫',loading:'執緊屋企啲嘢…',who:'🙂 揀人',search:'🔎 搵嘢…',
+  scanTitle:'影相認產品',scanTip:'影條碼，或者直接影件產品，都會自動認出！',photo:'📸 影相（條碼或產品）',reading:'讀緊條碼…',aiReading:'🤖 AI 睇緊張相…',tagAi:'🤖 AI 認到，請檢查下個名',aiOff:'讀唔到條碼。叫 Joe Joe 開咗「AI 讀相」就可以認任何相 🤖',aiErr:'AI 暫時用唔到，請打條碼號碼或者手動加',typeCode:'或者打條碼號碼',
+  noBarcode:'🥬 冇條碼？手動加',scanHelp:'💡 影相貼士：手機距離條碼大約 10–15 cm，條碼要清楚、打橫、光猛，唔好反光。讀唔到可以直接打條碼下面嘅號碼。第一次掃新產品要改返個名，之後就識得自動認出 ✨',
+  shopTitle:'🛒 購物清單',shopPh:'要買咩？',clearBought:'🧹 清除已買',shopTip:'🤖 用到少過「補貨提醒」數量會自動加入清單；入貨時會自動剔走 ✅',saving:'儲存緊…',pinTitle:'🔐 屋企密碼',pinSub:'第一次用要輸入屋企密碼（問 Joe Joe）',pinOk:'確定',pinWrong:'密碼唔啱，再試一次',pinNotSet:'Joe Joe 未設定屋企密碼（APP_PIN）',tooMany:'試錯太多次，請 10 分鐘後再試',offline:'離線中：顯示上次嘅資料',refreshed:'🔄 已更新',shopHow:'📝 點用：<br>① 喺上面打要買嘅嘢，撳「＋」<br>② 買咗就撳嗰行，會打剔 ✅（+3 分）<br>③ 撳「清除已買」清走已剔嘅<br>④ 撳「📤 Send 去 WhatsApp」帶張清單出街',
+  navHome:'首頁',navStock:'庫存',navScan:'掃描',navShop:'購物',navRank:'排行',
+  health:'屋企健康分',msg1:'屋企好有條理！',msg2:'幾好，留意下快過期嘅嘢',msg3:'有啲嘢要快啲食咗佢喇',msg4:'救命！好多嘢過期喇 😭',
+  statItems:'件存貨',statExp:'快過期',statLow:'唔夠貨',expTitle:'⏰ 快過期，快啲食！',allFresh:'全部新鮮 ✨',lowTitle:'📉 唔夠貨',
+  lowMeta:(h,u,m)=>`得返 ${h} ${u}（想有 ${m}）`,addList:'🛒 加入清單',plenty:'貨源充足 💪',recent:'📝 最近發生咩事',noLog:'未有紀錄，去掃第一件嘢啦！',
+  all:'全部',addBtn:'＋入貨',notFound:'搵唔到 🙈',emptyStock:'屋企空空如也～去掃描入貨啦 📷',noShop:'冇嘢要買 🎉',
+  board:'🏆 屋企積分榜',me:'我',toLevel:n=>`差 ${n} 分升級`,howEarn:'✨ 點樣儲分',earnAdd:'📥 掃描入貨',earnUse:'😋 用咗記低',earnBuy:'🛒 買完剔走',earnToss:'🗑️ 過期丟咗',earnTossNote:'（下次早啲食啦～）',
+  addMember:'👋 加成員',name:'名稱',emojiPh:'Emoji 例如 🐱',family:'👨‍👩‍👧 家人',helper:'🧹 工人',join:'＋ 加入',enterName:'請輸入名稱',welcome:(e,n)=>`歡迎 ${e} ${n} 加入！`,
+  whoAreYou:'你係邊個？',noName:'冇你個名？去「🏆 排行」加成員',hi:n=>`Hi ${n}！今日都要好好管理屋企 💪`,
+  used:n=>`😋 用咗 ${n}！+5 分`,tossConfirm:(n,q)=>`丟咗成批「${n}」×${q}？`,tossed:'🗑️ 已丟，下次早啲食啦～',addedShop:'🛒 已加入購物清單',bought:'✅ 買咗！+3 分',cleared:'🧹 清理好喇',
+  photoFail:'讀唔到條碼 🙈 影近啲、光啲、唔好反光再試；或者直接打條碼號碼',enterCode:'請輸入條碼',lookingUp:'搵緊產品資料…',
+  tagMine:'✅ 屋企識得佢',tagOff:'🌍 網上搵到',tagNew:'🆕 新產品！請輸入名稱',tagManual:'✍️ 手動加',unknown:'未知產品',
+  have:(t,u)=>`🏠 屋企仲有 <b>${t}</b> ${u} · 先用最快過期嗰批 👇`,addStock:'📥 入貨',fName:'名稱',namePh:'例如：維他奶 / 雞蛋 / 廁紙',fCat:'分類',fQty:'數量',fUnit:'單位',unitPh:'件/包/盒/支',defUnit:'件',
+  fWhere:'放邊度',fExp:'到期日',quick:['+3日','+1週','+2週','+1個月','+3個月','+半年','+1年'],noExp:'♾️ 冇期限',fMin:'少過幾多要提我補貨？',minPh:'0 = 唔使提',save:'💾 儲存 · +10 分',
+  added:(n,q)=>`🎉 入咗 ${n} ×${q}！+10 分`,bNoExp:'冇期限',bExpired:d=>`過期 ${d} 日`,bToday:'今日到期!',bDays:d=>`${d} 日`,pts:'分',loadFail:'載入失敗',
+  titles:['新手 🐣','整理達人 ⭐','屋企管家 👑','傳說級 🦄','宇宙無敵 🌈'],
+  photoGridTitle:'🥬 冇條碼嘅嘢',photoGridTip:'睇相㩒返件嘢就得，唔使打字',photoGridEmpty:'未有。㩒上面「冇條碼？手動加」，影張相就會喺度出現',
+  addPhoto:'📸 影張相',changePhoto:'📸 換相',photoSaved:'📸 相片已加入',useOne:'😋 用咗 1 件',waShare:'📤 Send 去 WhatsApp',
+  waHead:d=>`🏠 屋企寶庫 · ${d}`,waExp:'⏰ 快過期：',waLow:'📉 唔夠貨：',waShop:'🛒 要買：',waNone:'✨ 全部 OK，冇嘢要提！',waLeft:d=>d<0?`過期${-d}日`:d===0?'今日到期':`${d}日`},
+ en:{brandIcon:'🏠 Home Stash',brandSub:'屋企寶庫',brand:'Home Stash',loading:'Tidying up…',who:'🙂 Who?',search:'🔎 Search…',
+  scanTitle:'Photo scan',scanTip:'Take a photo of the barcode — or just the product — and it is recognised automatically!',photo:'📸 Photo (barcode or product)',reading:'Reading barcode…',aiReading:'🤖 AI is looking at the photo…',tagAi:'🤖 Recognised by AI — please check the name',aiOff:'Barcode not readable. Ask Joe Joe to turn on AI photo reading 🤖',aiErr:'AI not available right now — please type the barcode or add by hand',typeCode:'Or type the barcode number',
+  noBarcode:'🥬 No barcode? Add by hand',scanHelp:'💡 Photo tips: hold the phone about 10–15 cm from the barcode, keep it sharp and well lit, avoid glare. If it still fails, just type the number under the barcode. The first time you scan a new product, type its name — next time it is recognised automatically ✨',
+  shopTitle:'🛒 Shopping list',shopPh:'What to buy?',clearBought:'🧹 Clear bought items',shopTip:'🤖 Items below their reminder level are added automatically, and ticked off when you add stock ✅',saving:'Saving…',pinTitle:'🔐 Family code',pinSub:'Enter the family code once (ask Joe Joe)',pinOk:'OK',pinWrong:'Wrong code, please try again',pinNotSet:'Joe Joe has not set the family code (APP_PIN) yet',tooMany:'Too many wrong tries — please wait 10 minutes',offline:'Offline: showing the last saved data',refreshed:'🔄 Updated',shopHow:'📝 How to use:<br>① Type what to buy above and tap ＋<br>② Tap a line when bought — it gets ticked ✅ (+3 pts)<br>③ Tap “Clear bought items” to remove ticked ones<br>④ Tap “📤 Send to WhatsApp” to take the list shopping',
+  navHome:'Home',navStock:'Stock',navScan:'Scan',navShop:'Shop',navRank:'Ranks',
+  health:'Home Health',msg1:'Super organised! Great job!',msg2:'Good — watch items expiring soon',msg3:'Some things need eating soon!',msg4:'Help! Lots of things expired 😭',
+  statItems:'items',statExp:'expiring',statLow:'running low',expTitle:'⏰ Eat me first!',allFresh:'All fresh ✨',lowTitle:'📉 Running low',
+  lowMeta:(h,u,m)=>`Only ${h} ${u} left (want ${m})`,addList:'🛒 Add to list',plenty:'Well stocked 💪',recent:'📝 Recent activity',noLog:'Nothing yet — scan your first item!',
+  all:'All',addBtn:'＋Add',notFound:'Nothing found 🙈',emptyStock:'Nothing here yet — go scan something 📷',noShop:'Nothing to buy 🎉',
+  board:'🏆 Leaderboard',me:'Me',toLevel:n=>`${n} pts to next level`,howEarn:'✨ How to earn points',earnAdd:'📥 Add stock',earnUse:'😋 Mark as used',earnBuy:'🛒 Tick off shopping',earnToss:'🗑️ Thrown away',earnTossNote:'(eat it sooner next time!)',
+  addMember:'👋 Add member',name:'Name',emojiPh:'Emoji e.g. 🐱',family:'👨‍👩‍👧 Family',helper:'🧹 Helper',join:'＋ Add',enterName:'Please enter a name',welcome:(e,n)=>`Welcome, ${e} ${n}!`,
+  whoAreYou:'Who are you?',noName:'Not listed? Add yourself in 🏆 Ranks',hi:n=>`Hi ${n}! Let's keep the home organised 💪`,
+  used:n=>`😋 Used ${n}! +5 pts`,tossConfirm:(n,q)=>`Throw away all of "${n}" ×${q}?`,tossed:'🗑️ Thrown away — eat it sooner next time!',addedShop:'🛒 Added to shopping list',bought:'✅ Bought! +3 pts',cleared:'🧹 Cleared',
+  photoFail:'Can\'t read the barcode 🙈 Try closer, brighter, no glare — or type the number',enterCode:'Please enter a barcode',lookingUp:'Looking up product…',
+  tagMine:'✅ Known item',tagOff:'🌍 Found online',tagNew:'🆕 New item! Please type its name',tagManual:'✍️ Added by hand',unknown:'Unknown product',
+  have:(t,u)=>`🏠 At home: <b>${t}</b> ${u} · use the earliest-expiring first 👇`,addStock:'📥 Add stock',fName:'Name',namePh:'e.g. Soy milk / Eggs / Toilet paper',fCat:'Category',fQty:'Qty',fUnit:'Unit',unitPh:'pcs / pack / box / bottle',defUnit:'pcs',
+  fWhere:'Where',fExp:'Expiry date',quick:['+3d','+1wk','+2wk','+1mo','+3mo','+6mo','+1yr'],noExp:'♾️ No expiry',fMin:'Remind me when below',minPh:'0 = no reminder',save:'💾 Save · +10 pts',
+  added:(n,q)=>`🎉 Added ${n} ×${q}! +10 pts`,bNoExp:'No expiry',bExpired:d=>`Expired ${d}d ago`,bToday:'Expires today!',bDays:d=>d===1?'1 day':`${d} days`,pts:'pts',loadFail:'Failed to load',
+  titles:['Rookie 🐣','Tidy Pro ⭐','Home Hero 👑','Legend 🦄','Unstoppable 🌈'],
+  photoGridTitle:'🥬 Items without barcode',photoGridTip:'Tap the picture — no typing needed',photoGridEmpty:'None yet. Tap "No barcode? Add by hand" above and take a photo — it will show up here',
+  addPhoto:'📸 Take photo',changePhoto:'📸 Change photo',photoSaved:'📸 Photo added',useOne:'😋 Used 1',waShare:'📤 Send to WhatsApp',
+  waHead:d=>`🏠 Home Stash · ${d}`,waExp:'⏰ Expiring soon:',waLow:'📉 Running low:',waShop:'🛒 To buy:',waNone:'✨ All good, nothing to report!',waLeft:d=>d<0?`expired ${-d}d ago`:d===0?'expires today':d===1?'1 day left':`${d} days left`}
+};
+// 儲存喺 Sheet 嘅中文值 → 顯示名稱
+const NAMES={en:{'雪櫃':'Fridge','急凍':'Freezer','廚櫃':'Cupboard','雜物房':'Storeroom','浴室':'Bathroom','其他':'Other',
+  '飲品':'Drinks','奶類':'Dairy','零食':'Snacks','米麵':'Rice & Noodles','蔬果':'Fruit & Veg','肉類':'Meat & Eggs','調味料':'Sauces','日用品':'Household','清潔':'Cleaning',
+  '入貨 📥':'added 📥','用咗 😋':'used 😋','丟咗 🗑️':'threw away 🗑️','🤖 自動':'🤖 Auto','件':'pcs','家人':'Family','工人':'Helper'}};
+const CAT_EN={'急凍':'Frozen'}; // 分類「急凍」英文叫 Frozen，位置「急凍」叫 Freezer
+let LANG=ls('hs_lang')||'en';
+function t(k,...a){const v=(L[LANG]||L.en)[k];return typeof v==='function'?v(...a):(v==null?k:v);}
+function nm(s){return LANG==='en'?((NAMES.en[s])||s):s;}
+function catName(c){return LANG==='en'&&CAT_EN[c]?CAT_EN[c]:nm(c);}
+function applyStatic(){
+  document.documentElement.lang=LANG==='en'?'en':'zh-HK';
+  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=t(el.dataset.t));
+  document.querySelectorAll('[data-tp]').forEach(el=>el.placeholder=t(el.dataset.tp));
+  document.getElementById('langBtn').textContent=LANG==='en'?'中文':'EN';
+  document.title=t('brand');
+  document.getElementById('shopHow').innerHTML=t('shopHow');
+}
+function toggleLang(){LANG=LANG==='en'?'zh':'en';ls('hs_lang',LANG);applyStatic();if(S.data)renderAll();if(!document.getElementById('picker').classList.contains('hidden'))showPicker();}
+
+const LOCS=[['雪櫃','❄️'],['急凍','🧊'],['廚櫃','🗄️'],['雜物房','📦'],['浴室','🛁'],['其他','🏷️']];
+const CATS=[['飲品','🥤'],['奶類','🥛'],['零食','🍪'],['米麵','🍞'],['蔬果','🥬'],['肉類','🍖'],['急凍','🧊'],['調味料','🧂'],['日用品','🧻'],['清潔','🧴'],['其他','📦']];
+const CAT_LOC={'急凍':'急凍','奶類':'雪櫃','蔬果':'雪櫃','肉類':'雪櫃','日用品':'雜物房','清潔':'雜物房'};
+const TITLE_PTS=[0,50,150,300,600];
+const S={data:null,me:ls('hs_me')||'',loc:'全部',q:'',tab:'home'};
+
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function jsq(s){return esc(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+const API='https://script.google.com/macros/s/AKfycby7VJylcc9bKbSDPOkP2B26-vP87b17JnRHXk0yOs_l3JfB0o3m_71GrAZFiHP81XfC/exec';
+class PinError extends Error{}
+async function run(fn,...args){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},cache:'no-store',
+    body:JSON.stringify({fn,args,pin:ls('hs_pin')||''})});
+  const j=await r.json();
+  if(!j.ok){
+    if(/^(BADPIN|NOPIN|LOCKED)$/.test(j.err))throw new PinError(j.err);
+    throw new Error(j.err||'Server error');
+  }
+  if(fn==='getData'||(j.data&&j.data.stock))cacheData(j.data);
+  return j.data;
+}
+function cacheData(d){try{localStorage.setItem('hs_cache',JSON.stringify(d));}catch(e){}}
+function cachedData(){try{return JSON.parse(localStorage.getItem('hs_cache')||'null');}catch(e){return null;}}
+function askPin(err){
+  return new Promise(res=>{
+    const msg=err==='NOPIN'?t('pinNotSet'):err==='LOCKED'?t('tooMany'):err==='BADPIN'?t('pinWrong'):'';
+    document.getElementById('pickerBody').innerHTML=`<div id="pinBox"><div style="font-size:46px">🏠</div><h2>${t('pinTitle')}</h2><div class="sub">${t('pinSub')}</div>
+      <input id="pinIn" type="password" inputmode="numeric" autocomplete="off" maxlength="20">
+      <div id="pinErr">${msg}</div>
+      <button class="btn primary full" id="pinGo">${t('pinOk')}</button>
+      <button class="me lang" style="margin-top:12px" onclick="toggleLang();askPin.again()">${LANG==='en'?'中文':'English'}</button></div>`;
+    document.getElementById('picker').classList.remove('hidden');
+    const sp=document.getElementById('splash');if(sp)sp.style.display='none';
+    const go=()=>{const v=document.getElementById('pinIn').value.trim();if(!v)return;ls('hs_pin',v);document.getElementById('picker').classList.add('hidden');res();};
+    document.getElementById('pinGo').onclick=go;
+    document.getElementById('pinIn').onkeydown=e=>{if(e.key==='Enter')go();};
+    askPin.again=()=>askPin(err).then(res);
+    setTimeout(()=>document.getElementById('pinIn').focus(),100);
+  });
+}
+async function call(fn,...a){
+  busy(true);
+  try{const d=await run(fn,...a);if(d&&d.stock){S.data=d;lastLoad=Date.now();renderAll();}return d;}
+  catch(e){if(e instanceof PinError){busy(false);await askPin(e.message);return call(fn,...a);}toast('😵 '+(e.message||e));throw e;}
+  finally{busy(false);}
+}
+let busyN=0;
+function busy(on){busyN=Math.max(0,busyN+(on?1:-1));const v=busyN>0;document.getElementById('busy').classList.toggle('on',v);document.getElementById('loaderTxt').textContent=t('saving');document.getElementById('loader').classList.toggle('on',v);}
+function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200);}
+function pop(emoji,n=12){
+  for(let i=0;i<n;i++){const s=document.createElement('span');s.className='pop';s.textContent=Array.isArray(emoji)?emoji[i%emoji.length]:emoji;
+    s.style.left=(window.innerWidth/2-14)+'px';s.style.top=(window.innerHeight-160)+'px';
+    s.style.setProperty('--dx',(Math.random()*260-130)+'px');s.style.setProperty('--rot',(Math.random()*360-180)+'deg');
+    s.style.animationDelay=(i*0.04)+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),1500);}
+}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.frequency.value=1200;o.connect(g);g.connect(c.destination);g.gain.value=.15;o.start();o.stop(c.currentTime+.12);}catch(e){}if(navigator.vibrate)navigator.vibrate(60);}
+const catEmoji=c=>(CATS.find(x=>x[0]===c)||['', '📦'])[1];
+const locEmoji=l=>(LOCS.find(x=>x[0]===l)||['','🏷️'])[1];
+function badge(d){
+  if(d===null||d===undefined)return `<span class="badge b-gry">${t('bNoExp')}</span>`;
+  if(d<0)return `<span class="badge b-red">${t('bExpired',-d)}</span>`;
+  if(d===0)return `<span class="badge b-red">${t('bToday')}</span>`;
+  if(d<=3)return `<span class="badge b-org">${t('bDays',d)}</span>`;
+  if(d<=14)return `<span class="badge b-yel">${t('bDays',d)}</span>`;
+  return `<span class="badge b-grn">${t('bDays',d)}</span>`;
+}
+function thumb(s){return s.image?`<img src="${esc(s.image)}" onerror="this.replaceWith(document.createTextNode('${s.emoji}'))">`:s.emoji;}
+
+/* ---------- 導航 ---------- */
+function go(tab){
+  S.tab=tab;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id==='tab-'+tab));
+  document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('on',x.dataset.tab===tab));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- 渲染 ---------- */
+function renderAll(){renderMe();renderHome();renderStock();renderShop();renderRank();renderPhotoGrid();}
+
+function renderPhotoGrid(){
+  const items=S.data.items.filter(i=>!i.barcode);
+  const totals={};S.data.stock.forEach(s=>totals[s.key]=(totals[s.key]||0)+s.qty);
+  document.getElementById('photoGrid').innerHTML=items.length?items.map(i=>{const k='N:'+i.name;
+    return `<button class="ptile" onclick="openKey('${jsq(k)}')"><div class="pimg">${i.image?`<img src="${esc(i.image)}">`:i.emoji}</div>
+      <b>${esc(i.name)}</b><span>×${totals[k]||0}</span></button>`;}).join('')
+    :`<p class="empty" style="grid-column:1/-1">${t('photoGridEmpty')}</p>`;
+}
+
+/* 影相：縮細做 200px 細圖，直接存入 Sheet（唔使額外權限） */
+function takePhoto(input){
+  const f=input.files[0];if(!f)return;
+  const img=new Image(),url=URL.createObjectURL(f);
+  img.onload=()=>{
+    const max=200,r=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    let q=0.75,data=c.toDataURL('image/jpeg',q);
+    while(data.length>40000&&q>0.3){q-=0.15;data=c.toDataURL('image/jpeg',q);}
+    URL.revokeObjectURL(url);
+    const fm=document.getElementById('f');fm.image.value=data;
+    document.getElementById('bigEm').innerHTML=`<img src="${data}">`;
+    document.getElementById('photoBtnTxt').textContent=t('changePhoto');
+    toast(t('photoSaved'));
+  };
+  img.src=url;input.value='';
+}
+
+/* WhatsApp：打開 WhatsApp 並寫好訊息，自己揀群組 send */
+function waText(){
+  const d=S.data,lines=[t('waHead',d.today)];
+  if(d.expiring.length){lines.push('',t('waExp'));d.expiring.forEach(s=>lines.push(`• ${s.emoji} ${s.name} ×${s.qty} (${nm(s.location)}) — ${t('waLeft',s.daysLeft)}`));}
+  if(d.low.length){lines.push('',t('waLow'));d.low.forEach(i=>lines.push(`• ${i.emoji} ${i.name}: ${i.have}/${i.minQty}`));}
+  const todo=d.shop.filter(x=>!x.done);
+  if(todo.length){lines.push('',t('waShop'));todo.forEach(x=>lines.push(`☐ ${x.name}`));}
+  if(lines.length===1)lines.push('',t('waNone'));
+  return lines.join('\n');
+}
+function shareWA(){
+  const a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(waText());
+  a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+}
+
+function renderMe(){
+  const m=(S.data.members||[]).find(x=>x.name===S.me);
+  document.getElementById('meBtn').innerHTML=m?`${m.emoji} ${esc(m.name)}<span class="ptsS"> · ${m.points}${t('pts')}</span>`:t('who');
+}
+
+function lotRow(s,i,arr,sub){
+  if(sub===true)return `<div class="lot sub">
+    <div class="info"><b>${locEmoji(s.location)} ${esc(nm(s.location))} · ×${s.qty} ${esc(nm(s.unit))}</b></div>
+    ${badge(s.daysLeft)}
+    <div class="acts"><button class="use" onclick="useLot('${s.id}')">😋-1</button><button class="toss" onclick="tossLot('${s.id}')">🗑️</button></div></div>`;
+  return `<div class="lot"><div class="em">${thumb(s)}</div>
+    <div class="info"><b>${esc(s.name)}</b><div class="meta">${locEmoji(s.location)} ${esc(nm(s.location))} · ×${s.qty} ${esc(nm(s.unit))}</div></div>
+    ${badge(s.daysLeft)}
+    <div class="acts"><button class="use" onclick="useLot('${s.id}')">😋-1</button><button class="toss" onclick="tossLot('${s.id}')">🗑️</button></div></div>`;
+}
+
+function renderHome(){
+  const d=S.data,h=d.health,mood=h>=90?'😍':h>=70?'🙂':h>=40?'😬':'😱';
+  const msg=h>=90?t('msg1'):h>=70?t('msg2'):h>=40?t('msg3'):t('msg4');
+  const totalQty=d.stock.reduce((a,s)=>a+s.qty,0);
+  document.getElementById('tab-home').innerHTML=`
+    <div class="card hero"><div class="ring" style="--p:${h}"><span>${mood}</span></div>
+      <div><div class="big">${h}<small> /100</small></div><div><b>${t('health')}</b></div><div class="sub">${msg}</div></div></div>
+    <div class="stats">
+      <div class="stat"><b>${totalQty}</b><span>${t('statItems')}</span></div>
+      <div class="stat"><b style="color:var(--red)">${d.expiring.length}</b><span>${t('statExp')}</span></div>
+      <div class="stat"><b style="color:#E07A2E">${d.low.length}</b><span>${t('statLow')}</span></div>
+    </div>
+    <div class="card"><h3>${t('expTitle')}</h3>
+      ${d.expiring.length?d.expiring.map(lotRow).join(''):`<p class="empty">${t('allFresh')}</p>`}</div>
+    <div class="card"><h3>${t('lowTitle')}</h3>
+      ${d.low.length?d.low.map(i=>`<div class="lot"><div class="em">${i.emoji}</div><div class="info"><b>${esc(i.name)}</b><div class="meta">${t('lowMeta',i.have,esc(nm(i.unit)),i.minQty)}</div></div>
+        <button class="mini" onclick="quickShop('${jsq(i.name)}')">${t('addList')}</button></div>`).join(''):`<p class="empty">${t('plenty')}</p>`}</div>
+    <button class="btn wa full" onclick="shareWA()">${t('waShare')}</button>`;
+}
+
+function renderStock(){
+  document.getElementById('locChips').innerHTML=[['全部','🌈']].concat(LOCS).map(([l,e])=>
+    `<button class="chip ${S.loc===l?'on':''}" onclick="S.loc='${l}';renderStock()">${e} ${l==='全部'?t('all'):nm(l)}</button>`).join('');
+  const list=S.data.stock.filter(s=>(S.loc==='全部'||s.location===S.loc)&&(!S.q||(s.name+s.category+catName(s.category)+s.barcode+s.location+nm(s.location)).toLowerCase().includes(S.q)));
+  const groups={};
+  list.forEach(s=>{(groups[s.key]=groups[s.key]||{key:s.key,name:s.name,emoji:s.emoji,image:s.image,unit:s.unit,category:s.category,barcode:s.barcode,total:0,lots:[]});groups[s.key].total+=s.qty;groups[s.key].lots.push(s);});
+  const dl=x=>x.daysLeft===null?99999:x.daysLeft;
+  const arr=Object.values(groups).map(g=>{g.lots.sort((a,b)=>dl(a)-dl(b));g.min=dl(g.lots[0]);return g;}).sort((a,b)=>a.min-b.min);
+  document.getElementById('stockList').innerHTML=arr.length?arr.map(g=>`
+    <div class="card group">
+      <div class="ghead"><div class="em">${thumb(g)}</div>
+        <div class="info"><b>${esc(g.name)}</b><div class="meta">${esc(catName(g.category))}</div></div>
+        <span class="total">×${g.total}</span>
+        <button class="mini" onclick="openKey('${jsq(g.key)}')">${t('addBtn')}</button></div>
+      ${g.lots.map((l,i,a)=>lotRow(l,i,a,true)).join('')}
+    </div>`).join(''):`<div class="card"><p class="empty">${S.q||S.loc!=='全部'?t('notFound'):t('emptyStock')}</p></div>`;
+}
+
+function renderShop(){
+  const shop=S.data.shop.slice().sort((a,b)=>a.done-b.done);
+  const todo=shop.filter(x=>!x.done).length;
+  const dot=document.getElementById('shopDot');dot.textContent=todo;dot.classList.toggle('hidden',!todo);
+  document.getElementById('shopList').innerHTML=shop.length?shop.map(x=>`
+    <div class="shopitem ${x.done?'done':''}" onclick="toggleShop('${x.id}')">
+      <div class="check">${x.done?'✓':''}</div>
+      <div class="info"><b>${esc(x.name)}</b><div class="meta">${esc(nm(x.by))} · ${esc(x.at.slice(5))}</div></div></div>`).join('')
+    :`<p class="empty">${t('noShop')}</p>`;
+}
+
+function title(p){let i=0;TITLE_PTS.forEach((x,j)=>{if(p>=x)i=j;});const next=i+1<TITLE_PTS.length?TITLE_PTS[i+1]:null;return {t:t('titles')[i],from:TITLE_PTS[i],next};}
+function renderRank(){
+  const ms=S.data.members,d=S.data;
+  const wasOpen=!!(document.getElementById('logBox')||{}).open;
+  document.getElementById('tab-rank').innerHTML=`
+    <div class="card"><h3>${t('board')}</h3>
+      ${ms.map((m,i)=>{const ti=title(m.points);const pct=ti.next!==null?Math.round((m.points-ti.from)/(ti.next-ti.from)*100):100;
+        return `<div class="rank"><div class="medal">${['🥇','🥈','🥉'][i]||'🎀'}</div><div class="avatar">${m.emoji}</div>
+        <div class="info"><b>${esc(m.name)} ${m.name===S.me?`<span class="pill">${t('me')}</span>`:''}</b>
+          <div class="meta">${ti.t}${ti.next!==null?` · ${t('toLevel',ti.next-m.points)}`:''}</div><div class="bar"><i style="width:${pct}%"></i></div></div>
+        <div class="pts">${m.points}</div></div>`;}).join('')}
+    </div>
+    <details class="card" id="logBox" ${wasOpen?'open':''}><summary>${t('recent')} <small style="font-weight:600;color:var(--muted)">(${d.log.length})</small></summary>
+      ${d.log.length?d.log.map(l=>`<div class="logline">${esc(l.who||'?')} ${esc(nm(l.action))} <b>${esc(l.name)}</b> ×${esc(l.qty)} <small>· ${esc(l.at.slice(5))}</small></div>`).join(''):`<p class="empty">${t('noLog')}</p>`}</details>
+    <div class="card"><h3>${t('howEarn')}</h3>
+      <div class="logline">${t('earnAdd')} <b>+10</b></div>
+      <div class="logline">${t('earnUse')} <b>+5</b></div>
+      <div class="logline">${t('earnBuy')} <b>+3</b></div>
+      <div class="logline">${t('earnToss')} <b>+0</b> ${t('earnTossNote')}</div></div>
+    <div class="card"><h3>${t('addMember')}</h3>
+      <div class="grid2"><input id="nmName" placeholder="${t('name')}"><input id="nmEmoji" placeholder="${t('emojiPh')}" maxlength="4"></div>
+      <div class="chips" style="margin-top:8px" id="nmRole"><button class="chip ${newRole==='家人'?'on':''}" onclick="pickRole(this,'家人')">${t('family')}</button><button class="chip ${newRole==='工人'?'on':''}" onclick="pickRole(this,'工人')">${t('helper')}</button></div>
+      <button class="btn primary full" onclick="newMember()">${t('join')}</button></div>`;
+}
+let newRole='家人';
+function pickRole(el,r){newRole=r;el.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+async function newMember(){
+  const n=document.getElementById('nmName').value.trim(),e=document.getElementById('nmEmoji').value.trim()||'🙂';
+  if(!n)return toast(t('enterName'));
+  await call('addMember',n,e,newRole);toast(t('welcome',e,n));pop(['🎉','💖','✨']);
+}
+
+/* ---------- 揀人 ---------- */
+function showPicker(){
+  const ms=(S.data&&S.data.members)||[];
+  document.getElementById('pickerBody').innerHTML=`<div style="font-size:46px">👋</div><h2>${t('whoAreYou')}</h2>
+    <div class="who">${ms.map(m=>`<button onclick="setMe('${jsq(m.name)}')"><span>${m.emoji}</span>${esc(m.name)}</button>`).join('')}</div>
+    <p class="tip">${t('noName')}</p>
+    <button class="me lang" onclick="toggleLang()">${LANG==='en'?'中文':'English'}</button>`;
+  document.getElementById('picker').classList.remove('hidden');
+}
+function setMe(n){S.me=n;ls('hs_me',n);document.getElementById('picker').classList.add('hidden');renderAll();toast(t('hi',n));}
+function needMe(){if(!S.me){showPicker();return false;}return true;}
+
+/* ---------- 動作 ---------- */
+async function useLot(id){
+  if(!needMe())return;
+  const s=S.data.stock.find(x=>x.id===id);
+  await call('consume',id,1,S.me,'use');
+  toast(t('used',s?s.name:''));pop(['😋','✨','💖'],8);
+  if(document.getElementById('sheet').classList.contains('hidden')===false && s){
+    const info=S.data.items.find(i=>(i.barcode?'B:'+i.barcode:'N:'+i.name)===s.key);if(info)renderItemSheet(Object.assign({source:'mine'},info));
+  }
+}
+async function tossLot(id){
+  if(!needMe())return;
+  const s=S.data.stock.find(x=>x.id===id);if(!s)return;
+  if(!confirm(t('tossConfirm',s.name,s.qty)))return;
+  await call('consume',id,s.qty,S.me,'toss');toast(t('tossed'));
+}
+async function quickShop(name){if(!needMe())return;await call('addShopping',name,S.me);toast(t('addedShop'));}
+async function addShop(){
+  if(!needMe())return;const el=document.getElementById('shopInput');const v=el.value.trim();if(!v)return;
+  await call('addShopping',v,S.me);el.value='';
+}
+async function toggleShop(id){
+  if(!needMe())return;const x=S.data.shop.find(s=>s.id===id);
+  await call('toggleShopping',id,S.me);if(x&&!x.done){toast(t('bought'));pop('🛍️',6);}
+}
+async function clearBought(){await call('clearBought');toast(t('cleared'));}
+
+/* ---------- 掃描（影相）---------- */
+const FORMATS=()=>[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.QR_CODE];
+let qr=null;
+function loadImg(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i);};i.onerror=rej;i.src=u;});}
+// 將相片整成幾個版本：縮細、裁中間、轉 90 度、加強對比
+function variants(img){
+  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height,out=[];
+  const mk=(sx,sy,sw,sh,max,rot,contrast)=>{
+    const r=Math.min(1,max/Math.max(sw,sh)),w=Math.round(sw*r),h=Math.round(sh*r);
+    const c=document.createElement('canvas');c.width=rot?h:w;c.height=rot?w:h;const x=c.getContext('2d');
+    if(contrast)x.filter='grayscale(1) contrast(1.8)';
+    if(rot){x.translate(h,0);x.rotate(Math.PI/2);}
+    x.drawImage(img,sx,sy,sw,sh,0,0,w,h);return c;};
+  out.push(mk(0,0,W,H,1400));
+  out.push(mk(W*.15,H*.25,W*.7,H*.5,1200));          // 中間
+  out.push(mk(0,0,W,H,900));
+  out.push(mk(W*.15,H*.25,W*.7,H*.5,1200,false,true)); // 中間 + 對比
+  out.push(mk(W*.3,H*.38,W*.4,H*.24,1600));           // 拉近中間（影得太遠）
+  out.push(mk(W*.3,H*.38,W*.4,H*.24,1600,false,true));
+  out.push(mk(W*.25,H*.15,W*.5,H*.7,1200,true));      // 直嘅條碼
+  out.push(mk(0,0,W,H,1400,true));
+  out.push(mk(0,0,W,H,600));
+  return out;
+}
+const toFile=c=>new Promise(r=>c.toBlob(b=>r(new File([b],'scan.jpg',{type:'image/jpeg'})),'image/jpeg',0.92));
+async function decodeLocal(img){
+  const vs=variants(img);
+  if('BarcodeDetector' in window){
+    try{const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']});
+      for(const c of vs){const r=await det.detect(c);if(r&&r.length)return r[0].rawValue;}}catch(e){}
+  }
+  if(typeof Html5Qrcode==='undefined')return '';
+  try{if(!qr)qr=new Html5Qrcode('readerFile',{formatsToSupport:FORMATS(),verbose:false});}catch(e){return '';}
+  for(const c of vs){try{const code=await qr.scanFile(await toFile(c),false);if(code)return code;}catch(e){}}
+  return '';
+}
+function shrink(img,max,q){
+  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height,r=Math.min(1,max/Math.max(W,H));
+  const c=document.createElement('canvas');c.width=Math.round(W*r);c.height=Math.round(H*r);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q);
+}
+const busyMsg=m=>openSheet(`<div class="center" style="padding:40px 0"><div class="spin">🔍</div><p>${m}</p></div>`);
+async function scanPhoto(input){
+  if(!needMe())return;const f=input.files[0];input.value='';if(!f)return;
+  busyMsg(t('reading'));
+  let img;try{img=await loadImg(f);}catch(e){closeSheet();toast(t('photoFail'));return;}
+  const code=await decodeLocal(img);
+  if(code){beep();openItem(code);return;}
+  if(!S.data.ai){closeSheet();toast(t('aiOff'));return;}
+  busyMsg(t('aiReading'));
+  let r;
+  try{r=await run('readPhoto',shrink(img,1280,0.85).split(',')[1]);}catch(e){r={error:'ai'};}
+  if(!r||r.error){closeSheet();toast(r&&r.error==='nokey'?t('aiOff'):t('aiErr'));return;}
+  const thumb=shrink(img,200,0.7);
+  if(r.barcode){
+    beep();busyMsg(t('lookingUp'));
+    let info;try{info=await run('lookupBarcode',r.barcode);}catch(e){info={source:'new',barcode:r.barcode};}
+    if(info.source==='new'){Object.assign(info,{source:'ai',name:r.name,brand:r.brand,category:r.category,emoji:catEmoji(r.category),image:thumb});}
+    renderItemSheet(info);return;
+  }
+  if(r.name){
+    beep();
+    const low=r.name.toLowerCase();
+    const hit=S.data.items.find(i=>!i.barcode&&(i.name.toLowerCase()===low||low.includes(i.name.toLowerCase())||i.name.toLowerCase().includes(low)));
+    if(hit){renderItemSheet(Object.assign({source:'mine'},hit));return;}
+    renderItemSheet({source:'ai',barcode:'',name:r.name,brand:r.brand,category:r.category,emoji:catEmoji(r.category),image:thumb});return;
+  }
+  closeSheet();toast(t('photoFail'));
+}
+function manualLookup(){const v=document.getElementById('manualCode').value.trim();if(!v)return toast(t('enterCode'));if(!needMe())return;openItem(v);}
+
+/* ---------- 產品頁 / 入貨 ---------- */
+function openSheet(html){document.getElementById('sheetBody').innerHTML=html;document.getElementById('sheet').classList.remove('hidden');}
+function closeSheet(){document.getElementById('sheet').classList.add('hidden');}
+async function openItem(code){
+  openSheet(`<div class="center" style="padding:40px 0"><div class="spin">🔍</div><p>${t('lookingUp')}</p></div>`);
+  let info;try{info=await run('lookupBarcode',String(code));}catch(e){info={source:'new',barcode:String(code)};}
+  renderItemSheet(info);
+}
+function openManual(name){if(!needMe())return;renderItemSheet({source:'manual',barcode:'',name:name||''});}
+function openKey(key){
+  const it=S.data.items.find(i=>(i.barcode?'B:'+i.barcode:'N:'+i.name)===key);
+  if(it)renderItemSheet(Object.assign({source:'mine'},it));else openManual(key.slice(2));
+}
+function addDays(n){const [y,m,d]=S.data.today.split('-').map(Number);const x=new Date(Date.UTC(y,m-1,d+n));return x.toISOString().slice(0,10);}
+
+function renderItemSheet(info){
+  const key=info.barcode?'B:'+info.barcode:'N:'+(info.name||'');
+  const lots=info.barcode||info.name?S.data.stock.filter(s=>s.key===key):[];
+  const total=lots.reduce((a,s)=>a+s.qty,0);
+  const cat=info.category||'其他',em=info.emoji||catEmoji(cat);
+  const unit=(info.unit&&!(LANG==='en'&&info.unit==='件'&&info.source!=='mine'))?info.unit:t('defUnit');
+  const loc=ls('hs_loc_'+cat)||CAT_LOC[cat]||'廚櫃';
+  const tag={mine:t('tagMine'),off:t('tagOff'),new:t('tagNew'),manual:t('tagManual'),ai:t('tagAi')}[info.source]||'';
+  const dl=x=>x.daysLeft===null?99999:x.daysLeft;
+  const q=t('quick'),qd=[3,7,14,30,90,182,365];
+  openSheet(`
+    <div class="sheet-head"><div class="big-em" id="bigEm">${info.image?`<img src="${esc(info.image)}">`:em}</div>
+      <div style="min-width:0"><span class="pill">${tag}</span><h2>${esc(info.name||t('unknown'))}</h2>
+      <div class="meta">${info.brand?esc(info.brand)+' · ':''}${info.barcode?'🔢 '+esc(info.barcode):''}</div></div>
+      <button class="x" onclick="closeSheet()">✕</button></div>
+    ${lots.length?`<div class="have">${t('have',total,esc(nm(unit)))}</div>
+      <button class="btn mint full big" onclick="useLot('${lots.slice().sort((a,b)=>dl(a)-dl(b))[0].id}')">${t('useOne')}</button>
+      <div class="card" style="padding:4px 12px;margin-top:8px">${lots.sort((a,b)=>dl(a)-dl(b)).map(lotRow).join('')}</div>`:''}
+    <form id="f" onsubmit="saveItem(event)">
+      <h3 style="margin:18px 0 0">${t('addStock')}</h3>
+      <input type="hidden" name="barcode" value="${esc(info.barcode||'')}">
+      <input type="hidden" name="image" value="${esc(info.image||'')}">
+      <input type="hidden" name="brand" value="${esc(info.brand||'')}">
+      <input type="hidden" name="category" value="${esc(cat)}">
+      <input type="hidden" name="emoji" value="${esc(em)}">
+      <input type="hidden" name="location" value="${esc(loc)}">
+      <label>${t('fName')}</label><input name="name" required value="${esc(info.name||'')}" placeholder="${t('namePh')}">
+      <label class="btn full" style="color:var(--ink);font-size:15px;margin-top:10px"><span id="photoBtnTxt">${info.image?t('changePhoto'):t('addPhoto')}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="takePhoto(this)" hidden></label>
+      <label>${t('fCat')}</label>
+      <div class="chips" id="catChips">${CATS.map(([c,e])=>`<button type="button" class="chip ${c===cat?'on':''}" onclick="pickCat(this,'${c}','${e}')">${e} ${catName(c)}</button>`).join('')}</div>
+      <div class="grid2">
+        <div><label>${t('fQty')}</label><div class="stepper"><button type="button" onclick="step(-1)">−</button><input name="qty" type="number" min="1" value="1"><button type="button" onclick="step(1)">＋</button></div></div>
+        <div><label>${t('fUnit')}</label><input name="unit" value="${esc(nm(unit))}" placeholder="${t('unitPh')}"></div>
+      </div>
+      <label>${t('fWhere')}</label>
+      <div class="chips" id="locPick">${LOCS.map(([l,e])=>`<button type="button" class="chip ${l===loc?'on':''}" data-loc="${l}" onclick="pickLoc(this,'${l}')">${e} ${nm(l)}</button>`).join('')}</div>
+      <label>${t('fExp')}</label>
+      <input type="date" name="expiry" id="expiry">
+      <div class="chips small" style="margin-top:8px">
+        ${q.map((txt,i)=>`<button type="button" class="chip" onclick="document.getElementById('expiry').value=addDays(${qd[i]})">${txt}</button>`).join('')}
+        <button type="button" class="chip" onclick="document.getElementById('expiry').value=''">${t('noExp')}</button>
+      </div>
+      <label>${t('fMin')}</label>
+      <input type="number" name="minQty" min="0" value="${Number(info.minQty)||0}" placeholder="${t('minPh')}">
+      <button class="btn primary full" style="margin-top:18px">${t('save')}</button>
+    </form>`);
+}
+function pickCat(el,c,e){
+  const f=document.getElementById('f');f.category.value=c;f.emoji.value=e;
+  el.parentNode.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');
+  const l=ls('hs_loc_'+c)||CAT_LOC[c];if(l){const b=document.querySelector(`#locPick .chip[data-loc="${l}"]`);if(b)pickLoc(b,l);}
+}
+function pickLoc(el,l){document.getElementById('f').location.value=l;el.parentNode.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+function step(n){const i=document.getElementById('f').qty;i.value=Math.max(1,(Number(i.value)||1)+n);}
+async function saveItem(e){
+  e.preventDefault();if(!needMe())return;
+  const p=Object.fromEntries(new FormData(e.target).entries());p.member=S.me;
+  ls('hs_loc_'+p.category,p.location);
+  await call('addStock',p);
+  closeSheet();toast(t('added',p.name,p.qty));pop([p.emoji,'🎉','✨','💖'],14);
+}
+
+/* ---------- 更新 Refresh ---------- */
+let lastLoad=Date.now(),refreshing=false;
+async function refresh(silent){
+  if(refreshing)return;refreshing=true;const b=document.getElementById('refBtn');b.classList.add('spinning');
+  try{const d=await run('getData');S.data=d;lastLoad=Date.now();renderAll();if(!silent)toast(t('refreshed'));}
+  catch(e){if(e instanceof PinError){await askPin(e.message);refreshing=false;b.classList.remove('spinning');return refresh(silent);}if(!silent)toast(navigator.onLine===false?t('offline'):'😵 '+(e.message||e));}
+  finally{refreshing=false;b.classList.remove('spinning');}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&S.data&&Date.now()-lastLoad>30000&&document.getElementById('sheet').classList.contains('hidden'))refresh(true);
+});
+
+/* ---------- 開始 ---------- */
+applyStatic();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(async function init(){
+  const hideSplash=()=>{const sp=document.getElementById('splash');if(sp){sp.style.opacity=0;setTimeout(()=>sp.remove(),400);}};
+  // 秘密連結：…/home-stash/#k=暗號 → 記低，再喺網址清走
+  const km=location.hash.match(/[#&]k=([^&]+)/);
+  if(km){ls('hs_pin',decodeURIComponent(km[1]));history.replaceState(null,'',location.pathname+location.search);}
+  if(!ls('hs_pin'))await askPin('');
+  const c=ls('hs_pin')&&cachedData();
+  if(c){S.data=c;renderAll();hideSplash();}
+  for(;;){
+    try{S.data=await run('getData');lastLoad=Date.now();renderAll();break;}
+    catch(e){
+      if(e instanceof PinError){await askPin(e.message);continue;}
+      if(c){toast(t('offline'));break;}
+      document.getElementById('splash').style.display='';
+      document.getElementById('splash').innerHTML='<div><div class="bigicon">😵</div><h3>'+t('loadFail')+'</h3><p class="sub">'+esc(e.message||e)+'</p><button class="btn primary" onclick="location.reload()">↻</button></div>';return;
+    }
+  }
+  hideSplash();
+  if(!S.me||!S.data.members.some(m=>m.name===S.me))showPicker();
+})();
+</script>
+</body>
+</html>
